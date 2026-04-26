@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
+    <title>密码管家 | 优雅管理账号</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7fc 0%, #eef2f9 100%);
+            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            padding: 1.5rem 1.2rem;
+            min-height: 100vh;
+            color: #1e2a3e;
+        }
+
+        /* 主容器 - 自适应 */
+        .app-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        /* 头部区域 */
+        .header {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            gap: 1rem;
+            background: rgba(255,255,255,0.5);
+            backdrop-filter: blur(8px);
+            border-radius: 2rem;
+            padding: 0.8rem 1.5rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+        }
+
+        .title-area h1 {
+            font-size: 1.7rem;
+            font-weight: 600;
+            background: linear-gradient(120deg, #1f2b3c, #2c3e50);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            letter-spacing: -0.3px;
+        }
+
+        /* 搜索框 */
+        .search-wrapper {
+            flex: 1;
+            min-width: 200px;
+            max-width: 320px;
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 0.6rem 1rem 0.6rem 2.5rem;
+            border-radius: 2rem;
+            border: 1px solid #e2e8f0;
+            background: white;
+            font-size: 0.85rem;
+            outline: none;
+            transition: all 0.2s;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+        }
+        .search-input:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
+        }
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1rem;
+            color: #8ba0bc;
+            pointer-events: none;
+        }
+        .clear-search {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            font-size: 1rem;
+            cursor: pointer;
+            color: #94a3b8;
+            display: none;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: white;
+            border: none;
+            padding: 0.55rem 1.2rem;
+            border-radius: 2rem;
+            font-weight: 500;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            backdrop-filter: blur(2px);
+            color: #1e293b;
+            border: 1px solid #e2edf7;
+        }
+        .btn-primary {
+            background: #1e293b;
+            color: white;
+            border: none;
+        }
+        .btn-primary:hover {
+            background: #0f172a;
+            transform: translateY(-2px);
+        }
+        .btn-outline:hover {
+            background: white;
+            border-color: #bbd1e8;
+            transform: translateY(-1px);
+        }
+
+        /* 分类区域 */
+        .categories-section {
+            display: flex;
+            flex-direction: column;
+            gap: 1.6rem;
+        }
+
+        .category-card {
+            background: rgba(255,255,255,0.85);
+            backdrop-filter: blur(4px);
+            border-radius: 1.8rem;
+            box-shadow: 0 6px 14px rgba(0,0,0,0.03), 0 1px 2px rgba(0,0,0,0.05);
+            transition: all 0.2s;
+            border: 1px solid rgba(255,255,255,0.8);
+            overflow: hidden;
+        }
+
+        .category-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.9rem 1.5rem;
+            background: rgba(248,250,252,0.7);
+            border-bottom: 1px solid #eef2f8;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .cat-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .cat-name {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1e2f3e;
+        }
+        .cat-badge {
+            background: #e2edfc;
+            padding: 4px 10px;
+            border-radius: 30px;
+            font-size: 0.7rem;
+            font-weight: 500;
+            color: #1f3a64;
+        }
+        .category-actions {
+            display: flex;
+            gap: 8px;
+        }
+        .small-btn {
+            background: white;
+            border: 1px solid #dee7f0;
+            padding: 5px 12px;
+            border-radius: 2rem;
+            font-size: 0.7rem;
+            cursor: pointer;
+            font-weight: 500;
+            transition: 0.1s;
+        }
+        .small-btn:hover {
+            background: #f1f5f9;
+            border-color: #cbdbe0;
+        }
+
+        /* 账号列表网格 */
+        .items-grid {
+            padding: 1.2rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .cred-item {
+            background: white;
+            border-radius: 1.2rem;
+            padding: 0.9rem 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+            transition: all 0.2s;
+            border: 1px solid #ecf3fa;
+            cursor: grab;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+        }
+        .cred-item:active { cursor: grabbing; }
+        .dragging { opacity: 0.3; }
+        .drag-over { border-top: 3px solid #3b82f6; background: #f0f9ff; }
+
+        .cred-info {
+            flex: 3;
+            min-width: 200px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            align-items: baseline;
+        }
+        .cred-field {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            font-size: 0.7rem;
+            color: #5f7392;
+        }
+        .cred-field .value {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #0f172a;
+            word-break: break-all;
+        }
+        .highlight {
+            background-color: #fff3b8;
+            border-radius: 6px;
+            padding: 0 2px;
+            color: #b45309;
+            font-weight: 600;
+        }
+        .cred-actions {
+            display: flex;
+            gap: 6px;
+        }
+        .icon-btn {
+            background: transparent;
+            border: none;
+            font-size: 1.1rem;
+            cursor: pointer;
+            width: 32px;
+            height: 32px;
+            border-radius: 40px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.1s;
+            color: #5f74a0;
+        }
+        .icon-btn:hover { background: #eef3fc; }
+
+        /* 内嵌添加栏 */
+        .add-form-row {
+            margin: 0 1.2rem 1.2rem 1.2rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: flex-end;
+            background: #ffffffdb;
+            border-radius: 3rem;
+            padding: 8px 1rem;
+            backdrop-filter: blur(4px);
+        }
+        .add-form-row input, .add-form-row select {
+            padding: 7px 12px;
+            border-radius: 2rem;
+            border: 1px solid #dae6f2;
+            background: white;
+            font-size: 0.75rem;
+            flex: 1;
+            min-width: 120px;
+        }
+        .drag-icon {
+            cursor: grab;
+            font-size: 1.1rem;
+            color: #98a9c3;
+            margin-right: 6px;
+        }
+        .empty-placeholder {
+            text-align: center;
+            padding: 2rem;
+            color: #90a3c2;
+            font-style: italic;
+        }
+
+        /* 模态框美化 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            visibility: hidden;
+            opacity: 0;
+            transition: all 0.2s ease;
+        }
+        .modal-overlay.active {
+            visibility: visible;
+            opacity: 1;
+        }
+        .modal-container {
+            background: white;
+            border-radius: 2rem;
+            width: 90%;
+            max-width: 420px;
+            padding: 1.6rem 1.8rem;
+            box-shadow: 0 25px 45px rgba(0,0,0,0.2);
+            transform: scale(0.95);
+            transition: transform 0.2s;
+            text-align: center;
+        }
+        .modal-overlay.active .modal-container {
+            transform: scale(1);
+        }
+        .modal-container h3 {
+            font-size: 1.4rem;
+            margin-bottom: 1.2rem;
+            font-weight: 600;
+        }
+        .modal-input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin: 1rem 0;
+        }
+        .modal-input-group input, .modal-input-group select {
+            padding: 10px 14px;
+            border-radius: 3rem;
+            border: 1px solid #cbddee;
+            font-size: 0.9rem;
+            width: 100%;
+        }
+        .modal-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 1.5rem;
+        }
+        .modal-buttons button {
+            padding: 8px 18px;
+            border-radius: 2rem;
+            border: none;
+            font-weight: 500;
+            cursor: pointer;
+        }
+        .modal-cancel {
+            background: #f1f3f7;
+            color: #3f5579;
+        }
+        .modal-confirm {
+            background: #1e293b;
+            color: white;
+        }
+
+        @media (max-width: 680px) {
+            body { padding: 0.8rem; }
+            .category-header { padding: 0.8rem 1rem; }
+            .items-grid { padding: 1rem; }
+            .cred-info { flex-direction: column; gap: 8px; }
+        }
+        footer {
+            margin-top: 2rem;
+            text-align: center;
+            font-size: 0.65rem;
+            color: #8ea0bb;
+        }
+    </style>
+</head>
+<body>
+<div class="app-container">
+    <div class="header">
+        <div class="title-area">
+            <h1>🔐 小七密码保管箱</h1>
+        </div>
+        <div class="search-wrapper">
+            <span class="search-icon">🔍</span>
+            <input type="text" class="search-input" id="globalSearch" placeholder="搜索标题 / 账号 / 密码...">
+            <button class="clear-search" id="clearSearchBtn">✖</button>
+        </div>
+        <div class="action-buttons">
+            <button class="btn btn-outline" id="exportDataBtn">📤 导出</button>
+            <label for="importFileInput" class="btn btn-outline" style="cursor:pointer;">📥 导入</label>
+            <input type="file" id="importFileInput" accept=".json" style="display:none;" />
+            <button class="btn btn-primary" id="addCategoryBtn">+ 分类</button>
+        </div>
+    </div>
+
+    <div class="categories-section" id="categoriesContainer"></div>
+    <footer>✨ 小七导航，为更好的自己</footer>
+</div>
+<div style="text-align: center; margin-top: 1.5rem; padding: 0.8rem;">
+    <a href="https://yanqi-spec.github.io/daohanglaile/" target="_blank" style="color: #6c86a3; text-decoration: none; font-size: 0.8rem; transition: color 0.2s; font-weight: 500;">小七导航网</a>
+</div>
+<script>
+    // 全局数据
+    let categories = [];
+    let currentSearchKeyword = "";
+
+    // 模态框统一管理 (优雅弹窗)
+    function showModal(options) {
+        return new Promise((resolve) => {
+            const existingOverlay = document.querySelector('.modal-overlay');
+            if(existingOverlay) existingOverlay.remove();
+
+            const overlay = document.createElement('div');
+            overlay.className = 'modal-overlay';
+            const modalHtml = `
+                <div class="modal-container">
+                    <h3>${options.title || '提示'}</h3>
+                    <div class="modal-input-group" id="modalInputGroup"></div>
+                    <div class="modal-buttons">
+                        <button class="modal-cancel" id="modalCancelBtn">取消</button>
+                        <button class="modal-confirm" id="modalConfirmBtn">确定</button>
+                    </div>
+                </div>
+            `;
+            overlay.innerHTML = modalHtml;
+            document.body.appendChild(overlay);
+            const groupDiv = overlay.querySelector('#modalInputGroup');
+            if(options.inputs && options.inputs.length) {
+                options.inputs.forEach(input => {
+                    let inputEl;
+                    if(input.type === 'select' && input.options) {
+                        let select = document.createElement('select');
+                        select.id = input.id;
+                        input.options.forEach(opt => {
+                            let option = document.createElement('option');
+                            option.value = opt.value;
+                            option.textContent = opt.label;
+                            select.appendChild(option);
+                        });
+                        groupDiv.appendChild(select);
+                    } else {
+                        inputEl = document.createElement('input');
+                        inputEl.type = input.type || 'text';
+                        inputEl.placeholder = input.placeholder || '';
+                        inputEl.value = input.value || '';
+                        inputEl.id = input.id;
+                        groupDiv.appendChild(inputEl);
+                    }
+                });
+            } else if(options.message) {
+                const p = document.createElement('p');
+                p.style.textAlign = 'center';
+                p.style.margin = '1rem 0';
+                p.innerText = options.message;
+                groupDiv.appendChild(p);
+            }
+
+            const confirmBtn = overlay.querySelector('#modalConfirmBtn');
+            const cancelBtn = overlay.querySelector('#modalCancelBtn');
+            const closeModal = (result) => {
+                overlay.classList.remove('active');
+                setTimeout(() => overlay.remove(), 200);
+                resolve(result);
+            };
+            confirmBtn.onclick = () => {
+                const values = {};
+                if(options.inputs) {
+                    options.inputs.forEach(inp => {
+                        const el = document.getElementById(inp.id);
+                        if(el) values[inp.key] = el.value;
+                    });
+                }
+                closeModal(values);
+            };
+            cancelBtn.onclick = () => closeModal(null);
+            setTimeout(() => overlay.classList.add('active'), 10);
+        });
+    }
+
+    // 全局方法: 弹窗重命名分类 (支持统一修改)
+    async function renameCategory(catId) {
+        const category = categories.find(c => c.id === catId);
+        if(!category) return;
+        const result = await showModal({
+            title: '重命名分类',
+            inputs: [{ id: 'catName', placeholder: '分类名称', type: 'text', value: category.name, key: 'name' }]
+        });
+        if(result && result.name && result.name.trim()) {
+            category.name = result.name.trim();
+            saveToLocal();
+            render();
+        }
+    }
+
+    // 编辑账号弹窗 (统一)
+    async function editAccountItem(catId, itemId) {
+        const category = categories.find(c => c.id === catId);
+        if(!category) return;
+        const item = category.items.find(i => i.id === itemId);
+        if(!item) return;
+        const result = await showModal({
+            title: '编辑账号',
+            inputs: [
+                { id: 'editTitle', placeholder: '标题', type: 'text', value: item.title, key: 'title' },
+                { id: 'editUsername', placeholder: '账号/邮箱', type: 'text', value: item.username, key: 'username' },
+                { id: 'editPassword', placeholder: '密码', type: 'text', value: item.password, key: 'password' }
+            ]
+        });
+        if(result) {
+            if(result.title && result.title.trim()) item.title = result.title.trim();
+            if(result.username && result.username.trim()) item.username = result.username.trim();
+            if(result.password && result.password.trim()) item.password = result.password.trim();
+            saveToLocal();
+            render();
+        }
+    }
+
+    // 新建分类弹窗
+    async function promptNewCategory() {
+        const result = await showModal({
+            title: '新建分类',
+            inputs: [{ id: 'newCatName', placeholder: '分类名称 (例如: 工作)', type: 'text', value: '', key: 'name' }]
+        });
+        if(result && result.name && result.name.trim()) {
+            const newCat = { id: uuid(), name: result.name.trim(), items: [] };
+            categories.push(newCat);
+            saveToLocal();
+            render();
+        }
+    }
+
+    // 新增账号弹窗 (通用)
+    async function promptAddItemToCategory(catId) {
+        const result = await showModal({
+            title: '添加账号密码',
+            inputs: [
+                { id: 'title', placeholder: '标题 (如 GitHub)', type: 'text', value: '', key: 'title' },
+                { id: 'username', placeholder: '账号 / 邮箱', type: 'text', value: '', key: 'username' },
+                { id: 'password', placeholder: '密码', type: 'text', value: '', key: 'password' }
+            ]
+        });
+        if(result && result.title && result.username && result.password) {
+            const category = categories.find(c => c.id === catId);
+            if(category) {
+                category.items.push({
+                    id: uuid(),
+                    title: result.title.trim(),
+                    username: result.username.trim(),
+                    password: result.password.trim()
+                });
+                saveToLocal();
+                render();
+            } else alert('分类不存在');
+        } else if(result) alert('请完整填写标题、账号和密码');
+    }
+
+    // 删除分类确认弹窗
+    async function confirmDeleteCategory(catId) {
+        const res = await showModal({ title: '删除分类', message: '确定删除整个分类及内部所有账号吗？此操作不可撤销。', inputs: [] });
+        if(res !== null) {
+            categories = categories.filter(c => c.id !== catId);
+            saveToLocal();
+            render();
+        }
+    }
+
+    async function confirmDeleteItem(catId, itemId) {
+        const res = await showModal({ title: '删除账号', message: '确定删除此账号密码吗？', inputs: [] });
+        if(res !== null) {
+            const category = categories.find(c => c.id === catId);
+            if(category) category.items = category.items.filter(i => i.id !== itemId);
+            saveToLocal();
+            render();
+        }
+    }
+
+    function uuid() { return Date.now() + '-' + Math.random().toString(36).substr(2, 8); }
+
+    function getDefaultData() {
+        return [
+            { id: "cat_work", name: "💼 工作账户", items: [{ id: uuid(), title: "公司邮箱", username: "alice@company.com", password: "Work2024!" },{ id: uuid(), title: "Jira", username: "alice.zhang", password: "Jira@123" }] },
+            { id: "cat_social", name: "✨ 社交娱乐", items: [{ id: uuid(), title: "Twitter", username: "alice_world", password: "tw7890" },{ id: uuid(), title: "Discord", username: "alice#2333", password: "dc@233" }] },
+            { id: "cat_bank", name: "🏦 金融理财", items: [{ id: uuid(), title: "支付宝", username: "alice@alipay.com", password: "aliPay_789" }] }
+        ];
+    }
+
+    function loadData() {
+        const stored = localStorage.getItem("password_manager_categories");
+        if(stored) { try { const p = JSON.parse(stored); if(Array.isArray(p)) { categories = p; return; } } catch(e){} }
+        categories = getDefaultData();
+        saveToLocal();
+    }
+    function saveToLocal() { localStorage.setItem("password_manager_categories", JSON.stringify(categories)); }
+
+    // 高亮文本
+    function highlightText(text, keyword) {
+        if(!keyword || !text) return escapeHtml(text);
+        const regex = new RegExp(`(${escapeRegex(keyword)})`, 'gi');
+        return escapeHtml(text).replace(regex, `<span class="highlight">$1</span>`);
+    }
+    function escapeRegex(str) { return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+    function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, function(m){ if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m;}); }
+
+    // 渲染 (带搜索过滤)
+    function render() {
+        const container = document.getElementById('categoriesContainer');
+        if(!container) return;
+        const keyword = currentSearchKeyword.trim().toLowerCase();
+        // 过滤每个分类及条目
+        let filteredCategories = categories.map(cat => {
+            let filteredItems = cat.items.filter(item => 
+                !keyword || item.title.toLowerCase().includes(keyword) || 
+                item.username.toLowerCase().includes(keyword) || 
+                item.password.toLowerCase().includes(keyword)
+            );
+            return { ...cat, items: filteredItems };
+        }).filter(cat => keyword === "" || cat.items.length > 0);
+
+        if(filteredCategories.length === 0) {
+            container.innerHTML = `<div class="empty-placeholder">🔍 没有找到相关账号，试试其他关键词~</div>`;
+            return;
+        }
+
+        container.innerHTML = '';
+        filteredCategories.forEach((category, catIdx) => {
+            const originalCat = categories.find(c => c.id === category.id);
+            const catDiv = document.createElement('div');
+            catDiv.className = 'category-card';
+            catDiv.dataset.catId = category.id;
+            const headerDiv = document.createElement('div');
+            headerDiv.className = 'category-header';
+            headerDiv.innerHTML = `
+                <div class="cat-title">
+                    <span class="cat-name">${escapeHtml(category.name)}</span>
+                    <span class="cat-badge">${category.items.length} 项</span>
+                </div>
+                <div class="category-actions">
+                    <button class="small-btn edit-cat" data-id="${category.id}">✏️ 重命名</button>
+                    <button class="small-btn delete-cat" data-id="${category.id}">🗑️ 删除</button>
+                    <button class="small-btn add-item-btn" data-id="${category.id}">+ 添加</button>
+                </div>
+            `;
+            const itemsGrid = document.createElement('div');
+            itemsGrid.className = 'items-grid';
+            itemsGrid.setAttribute('data-catid', category.id);
+            if(category.items.length === 0) {
+                itemsGrid.innerHTML = `<div class="empty-placeholder">暂无匹配的账号</div>`;
+            } else {
+                category.items.forEach((item, idx) => {
+                    const card = document.createElement('div');
+                    card.className = 'cred-item';
+                    card.setAttribute('data-item-id', item.id);
+                    card.setAttribute('data-category-id', category.id);
+                    card.setAttribute('draggable', 'true');
+                    const highTitle = highlightText(item.title, keyword);
+                    const highUser = highlightText(item.username, keyword);
+                    const highPass = highlightText(item.password, keyword);
+                    card.innerHTML = `
+                        <div class="drag-icon">⋮⋮</div>
+                        <div class="cred-info">
+                            <div class="cred-field"><span>🔖 标题</span><div class="value">${highTitle}</div></div>
+                            <div class="cred-field"><span>👤 账号</span><div class="value">${highUser}</div></div>
+                            <div class="cred-field"><span>🔒 密码</span><div class="value password-val" data-real-pw="${escapeHtml(item.password)}">${keyword ? highPass : '••••••••'}</div></div>
+                        </div>
+                        <div class="cred-actions">
+                            <button class="icon-btn toggle-pw" title="显示/隐藏">👁️</button>
+                            <button class="icon-btn edit-item" title="编辑">✏️</button>
+                            <button class="icon-btn delete-item" title="删除">❌</button>
+                        </div>
+                    `;
+                    itemsGrid.appendChild(card);
+                });
+            }
+            catDiv.appendChild(headerDiv);
+            catDiv.appendChild(itemsGrid);
+            container.appendChild(catDiv);
+            // 内嵌添加栏 仅当该分类存在原始数据(让添加功能添加至真实分类)
+            const addRow = document.createElement('div');
+            addRow.className = 'add-form-row';
+            addRow.innerHTML = `<input type="text" placeholder="标题" class="quick-title"><input type="text" placeholder="账号" class="quick-user"><input type="text" placeholder="密码" class="quick-pass"><button class="small-btn quick-add">✔ 添加</button>`;
+            const quickAddBtn = addRow.querySelector('.quick-add');
+            quickAddBtn.addEventListener('click', () => {
+                const title = addRow.querySelector('.quick-title').value.trim();
+                const user = addRow.querySelector('.quick-user').value.trim();
+                const pass = addRow.querySelector('.quick-pass').value.trim();
+                if(!title || !user || !pass) { alert('请完整填写'); return; }
+                const realCat = categories.find(c => c.id === category.id);
+                if(realCat) { realCat.items.push({ id: uuid(), title, username: user, password: pass }); saveToLocal(); render(); }
+                else alert("分类不存在");
+            });
+            catDiv.appendChild(addRow);
+        });
+        attachDragAndDrop();
+        bindCategoryDynamicEvents();
+        bindItemDynamicEvents();
+        updateClearSearchBtn();
+    }
+
+    function updateClearSearchBtn() {
+        const clearBtn = document.getElementById('clearSearchBtn');
+        if(clearBtn) clearBtn.style.display = currentSearchKeyword ? 'block' : 'none';
+    }
+
+    // 拖拽排序 (同分类)
+    function attachDragAndDrop() {
+        const cards = document.querySelectorAll('.cred-item');
+        let dragSrc = null;
+        cards.forEach(card => {
+            card.ondragstart = (e) => { dragSrc = card; e.dataTransfer.effectAllowed = 'move'; card.classList.add('dragging'); e.dataTransfer.setData('text/plain',''); };
+            card.ondragend = (e) => { card.classList.remove('dragging'); document.querySelectorAll('.drag-over').forEach(el=>el.classList.remove('drag-over')); dragSrc=null; };
+            card.ondragover = (e) => { e.preventDefault(); if(!dragSrc || dragSrc===card) return; const grid = card.closest('.items-grid'); const srcGrid = dragSrc.closest('.items-grid'); if(grid?.dataset.catid !== srcGrid?.dataset.catid) return; card.classList.add('drag-over'); };
+            card.ondrop = (e) => {
+                e.preventDefault(); if(!dragSrc || dragSrc===card) return;
+                const targetGrid = card.closest('.items-grid'); const srcGrid = dragSrc.closest('.items-grid');
+                if(targetGrid?.dataset.catid !== srcGrid?.dataset.catid) { alert('不可跨分类拖动'); return; }
+                const catId = targetGrid.dataset.catid;
+                const category = categories.find(c=>c.id === catId);
+                if(category) {
+                    const dragId = dragSrc.getAttribute('data-item-id');
+                    const targetId = card.getAttribute('data-item-id');
+                    const dragIndex = category.items.findIndex(i=>i.id===dragId);
+                    const targetIndex = category.items.findIndex(i=>i.id===targetId);
+                    if(dragIndex !== -1 && targetIndex !== -1 && dragIndex !== targetIndex) {
+                        const [moved] = category.items.splice(dragIndex,1);
+                        category.items.splice(targetIndex,0,moved);
+                        saveToLocal(); render();
+                    }
+                }
+                card.classList.remove('drag-over');
+            };
+        });
+    }
+
+    function bindCategoryDynamicEvents() {
+        document.querySelectorAll('.edit-cat').forEach(btn => btn.onclick = (e) => { e.stopPropagation(); renameCategory(btn.dataset.id); });
+        document.querySelectorAll('.delete-cat').forEach(btn => btn.onclick = (e) => { e.stopPropagation(); confirmDeleteCategory(btn.dataset.id); });
+        document.querySelectorAll('.add-item-btn').forEach(btn => btn.onclick = (e) => { e.stopPropagation(); promptAddItemToCategory(btn.dataset.id); });
+    }
+    function bindItemDynamicEvents() {
+        document.querySelectorAll('.toggle-pw').forEach(btn => btn.onclick = (e) => { e.stopPropagation(); const card = btn.closest('.cred-item'); const pwSpan = card.querySelector('.password-val'); if(pwSpan) { if(pwSpan.innerText === '••••••••') { pwSpan.innerText = pwSpan.dataset.realPw; btn.innerText = '🙈'; } else { pwSpan.innerText = '••••••••'; btn.innerText = '👁️'; } } });
+        document.querySelectorAll('.edit-item').forEach(btn => btn.onclick = (e) => { e.stopPropagation(); const card = btn.closest('.cred-item'); const catId = card.dataset.categoryId; const itemId = card.dataset.itemId; editAccountItem(catId, itemId); });
+        document.querySelectorAll('.delete-item').forEach(btn => btn.onclick = (e) => { e.stopPropagation(); const card = btn.closest('.cred-item'); confirmDeleteItem(card.dataset.categoryId, card.dataset.itemId); });
+    }
+
+    // 导入导出
+    function exportData() { const dataStr = JSON.stringify(categories, null,2); const blob = new Blob([dataStr],{type:'application/json'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `passwords_${Date.now()}.json`; a.click(); URL.revokeObjectURL(a.href); }
+    function importData(file) { const reader = new FileReader(); reader.onload = (ev) => { try { const imported = JSON.parse(ev.target.result); if(Array.isArray(imported) && imported.every(c => c.id && typeof c.name === 'string' && Array.isArray(c.items))) { categories = imported; saveToLocal(); render(); alert('导入成功'); } else throw new Error(); } catch(e){ alert('文件格式错误'); } }; reader.readAsText(file); }
+
+    // 搜索监听
+    const searchInput = document.getElementById('globalSearch');
+    searchInput.addEventListener('input', (e) => { currentSearchKeyword = e.target.value; render(); });
+    document.getElementById('clearSearchBtn')?.addEventListener('click', () => { searchInput.value = ''; currentSearchKeyword = ''; render(); });
+    document.getElementById('exportDataBtn')?.addEventListener('click', exportData);
+    document.getElementById('importFileInput')?.addEventListener('change', (e) => { if(e.target.files.length) importData(e.target.files[0]); e.target.value = ''; });
+    document.getElementById('addCategoryBtn')?.addEventListener('click', promptNewCategory);
+
+    loadData();
+    render();
+</script>
+</body>
+</html>
