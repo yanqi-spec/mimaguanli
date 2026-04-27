@@ -681,8 +681,8 @@
                         <div class="drag-icon">⋮⋮</div>
                         <div class="cred-info">
                             <div class="cred-field"><span>🔖 标题</span><div class="value">${highTitle}</div></div>
-                            <div class="cred-field"><span>👤 账号</span><div class="value">${highUser}</div></div>
-                            <div class="cred-field"><span>🔒 密码</span><div class="value password-val" data-real-pw="${escapeHtml(item.password)}">${keyword ? highPass : '••••••••'}</div></div>
+                            <div class="cred-field"><span>👤 账号</span><div class="value copy-username" data-real-username="${escapeHtml(item.username)}" style="cursor:pointer;" title="点击复制账号">${highUser}</div></div>
+                            <div class="cred-field"><span>🔒 密码</span><div class="value password-val copy-pw" data-real-pw="${escapeHtml(item.password)}" style="cursor:pointer;" title="点击复制密码">${keyword ? highPass : '••••••••'}</div></div>
                         </div>
                         <div class="cred-actions">
                             <button class="icon-btn toggle-pw" title="显示/隐藏">👁️</button>
@@ -758,11 +758,42 @@
         document.querySelectorAll('.delete-cat').forEach(btn => btn.onclick = (e) => { e.stopPropagation(); confirmDeleteCategory(btn.dataset.id); });
         document.querySelectorAll('.add-item-btn').forEach(btn => btn.onclick = (e) => { e.stopPropagation(); promptAddItemToCategory(btn.dataset.id); });
     }
-    function bindItemDynamicEvents() {
-        document.querySelectorAll('.toggle-pw').forEach(btn => btn.onclick = (e) => { e.stopPropagation(); const card = btn.closest('.cred-item'); const pwSpan = card.querySelector('.password-val'); if(pwSpan) { if(pwSpan.innerText === '••••••••') { pwSpan.innerText = pwSpan.dataset.realPw; btn.innerText = '🙈'; } else { pwSpan.innerText = '••••••••'; btn.innerText = '👁️'; } } });
-        document.querySelectorAll('.edit-item').forEach(btn => btn.onclick = (e) => { e.stopPropagation(); const card = btn.closest('.cred-item'); const catId = card.dataset.categoryId; const itemId = card.dataset.itemId; editAccountItem(catId, itemId); });
-        document.querySelectorAll('.delete-item').forEach(btn => btn.onclick = (e) => { e.stopPropagation(); const card = btn.closest('.cred-item'); confirmDeleteItem(card.dataset.categoryId, card.dataset.itemId); });
-    }
+ function bindItemDynamicEvents() {
+    document.querySelectorAll('.toggle-pw').forEach(btn => btn.onclick = (e) => { e.stopPropagation(); const card = btn.closest('.cred-item'); const pwSpan = card.querySelector('.password-val'); if(pwSpan) { if(pwSpan.innerText === '••••••••') { pwSpan.innerText = pwSpan.dataset.realPw; btn.innerText = '🙈'; } else { pwSpan.innerText = '••••••••'; btn.innerText = '👁️'; } } });
+    document.querySelectorAll('.edit-item').forEach(btn => btn.onclick = (e) => { e.stopPropagation(); const card = btn.closest('.cred-item'); const catId = card.dataset.categoryId; const itemId = card.dataset.itemId; editAccountItem(catId, itemId); });
+    document.querySelectorAll('.delete-item').forEach(btn => btn.onclick = (e) => { e.stopPropagation(); const card = btn.closest('.cred-item'); confirmDeleteItem(card.dataset.categoryId, card.dataset.itemId); });
+
+    // 点击密码复制
+    document.querySelectorAll('.copy-pw').forEach(el => {
+        el.onclick = (e) => {
+            e.stopPropagation();
+            let password = el.dataset.realPw;
+            if (el.innerText === '••••••••') {
+                alert('请先点击👁️显示密码后再复制');
+                return;
+            }
+            navigator.clipboard.writeText(password).then(() => {
+                alert('✅ 密码已复制到剪贴板');
+            }).catch(() => {
+                alert('复制失败，请手动复制');
+            });
+        };
+    });
+
+    // 点击账号复制
+    document.querySelectorAll('.copy-username').forEach(el => {
+        el.onclick = (e) => {
+            e.stopPropagation();
+            let username = el.dataset.realUsername;
+            navigator.clipboard.writeText(username).then(() => {
+                alert('✅ 账号已复制到剪贴板');
+            }).catch(() => {
+                alert('复制失败，请手动复制');
+            });
+        };
+    });
+}
+
 
     // 导入导出
     function exportData() { const dataStr = JSON.stringify(categories, null,2); const blob = new Blob([dataStr],{type:'application/json'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `passwords_${Date.now()}.json`; a.click(); URL.revokeObjectURL(a.href); }
