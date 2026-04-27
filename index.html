@@ -523,15 +523,17 @@
         const result = await showModal({
             title: '编辑账号',
             inputs: [
-                { id: 'editTitle', placeholder: '标题', type: 'text', value: item.title, key: 'title' },
-                { id: 'editUsername', placeholder: '账号/邮箱', type: 'text', value: item.username, key: 'username' },
-                { id: 'editPassword', placeholder: '密码', type: 'text', value: item.password, key: 'password' }
-            ]
+    { id: 'editTitle', placeholder: '标题', type: 'text', value: item.title, key: 'title' },
+    { id: 'editUrl', placeholder: '链接地址', type: 'text', value: item.url || '', key: 'url' },
+    { id: 'editUsername', placeholder: '账号/邮箱', type: 'text', value: item.username, key: 'username' },
+    { id: 'editPassword', placeholder: '密码', type: 'text', value: item.password, key: 'password' }
+]
         });
         if(result) {
             if(result.title && result.title.trim()) item.title = result.title.trim();
             if(result.username && result.username.trim()) item.username = result.username.trim();
             if(result.password && result.password.trim()) item.password = result.password.trim();
+	if(result.url !== undefined) item.url = result.url.trim();
             saveToLocal();
             render();
         }
@@ -555,21 +557,23 @@
     async function promptAddItemToCategory(catId) {
         const result = await showModal({
             title: '添加账号密码',
-            inputs: [
-                { id: 'title', placeholder: '标题 (如 GitHub)', type: 'text', value: '', key: 'title' },
-                { id: 'username', placeholder: '账号 / 邮箱', type: 'text', value: '', key: 'username' },
-                { id: 'password', placeholder: '密码', type: 'text', value: '', key: 'password' }
-            ]
+           inputs: [
+    { id: 'title', placeholder: '标题 (如 GitHub)', type: 'text', value: '', key: 'title' },
+    { id: 'url', placeholder: '链接地址 (https://...)', type: 'text', value: '', key: 'url' },
+    { id: 'username', placeholder: '账号 / 邮箱', type: 'text', value: '', key: 'username' },
+    { id: 'password', placeholder: '密码', type: 'text', value: '', key: 'password' }
+]
         });
         if(result && result.title && result.username && result.password) {
             const category = categories.find(c => c.id === catId);
             if(category) {
                 category.items.push({
-                    id: uuid(),
-                    title: result.title.trim(),
-                    username: result.username.trim(),
-                    password: result.password.trim()
-                });
+    id: uuid(),
+    title: result.title.trim(),
+    url: result.url ? result.url.trim() : '',
+    username: result.username.trim(),
+    password: result.password.trim()
+});
                 saveToLocal();
                 render();
             } else alert('分类不存在');
@@ -599,12 +603,12 @@
     function uuid() { return Date.now() + '-' + Math.random().toString(36).substr(2, 8); }
 
     function getDefaultData() {
-        return [
-            { id: "cat_work", name: "💼 工作账户", items: [{ id: uuid(), title: "公司邮箱", username: "alice@company.com", password: "Work2024!" },{ id: uuid(), title: "Jira", username: "alice.zhang", password: "Jira@123" }] },
-            { id: "cat_social", name: "✨ 社交娱乐", items: [{ id: uuid(), title: "Twitter", username: "alice_world", password: "tw7890" },{ id: uuid(), title: "Discord", username: "alice#2333", password: "dc@233" }] },
-            { id: "cat_bank", name: "🏦 金融理财", items: [{ id: uuid(), title: "支付宝", username: "alice@alipay.com", password: "aliPay_789" }] }
-        ];
-    }
+    return [
+        { id: "cat_work", name: "💼 工作账户", items: [{ id: uuid(), title: "公司邮箱", url: "https://mail.company.com", username: "alice@company.com", password: "Work2024!" },{ id: uuid(), title: "Jira", url: "https://jira.company.com", username: "alice.zhang", password: "Jira@123" }] },
+        { id: "cat_social", name: "✨ 社交娱乐", items: [{ id: uuid(), title: "Twitter", url: "https://twitter.com", username: "alice_world", password: "tw7890" },{ id: uuid(), title: "Discord", url: "https://discord.com", username: "alice#2333", password: "dc@233" }] },
+        { id: "cat_bank", name: "🏦 金融理财", items: [{ id: uuid(), title: "支付宝", url: "https://alipay.com", username: "alice@alipay.com", password: "aliPay_789" }] }
+    ];
+}
 
     function loadData() {
         const stored = localStorage.getItem("password_manager_categories");
@@ -680,7 +684,7 @@
                     card.innerHTML = `
                         <div class="drag-icon">⋮⋮</div>
                         <div class="cred-info">
-                            <div class="cred-field"><span>🔖 标题</span><div class="value">${highTitle}</div></div>
+                            <div class="cred-field"><span>🔖 标题</span><div class="value copy-url" data-url="${escapeHtml(item.url || '')}" style="cursor:pointer;" title="点击复制链接">${highTitle}</div></div>
                             <div class="cred-field"><span>👤 账号</span><div class="value copy-username" data-real-username="${escapeHtml(item.username)}" style="cursor:pointer;" title="点击复制账号">${highUser}</div></div>
                             <div class="cred-field"><span>🔒 密码</span><div class="value password-val copy-pw" data-real-pw="${escapeHtml(item.password)}" style="cursor:pointer;" title="点击复制密码">${keyword ? highPass : '••••••••'}</div></div>
                         </div>
@@ -699,17 +703,18 @@
             // 内嵌添加栏 仅当该分类存在原始数据(让添加功能添加至真实分类)
             const addRow = document.createElement('div');
             addRow.className = 'add-form-row';
-            addRow.innerHTML = `<input type="text" placeholder="标题" class="quick-title"><input type="text" placeholder="账号" class="quick-user"><input type="text" placeholder="密码" class="quick-pass"><button class="small-btn quick-add">✔ 添加</button>`;
+            addRow.innerHTML = `<input type="text" placeholder="标题" class="quick-title"><input type="text" placeholder="链接" class="quick-url"><input type="text" placeholder="账号" class="quick-user"><input type="text" placeholder="密码" class="quick-pass"><button class="small-btn quick-add">✔ 添加</button>`;
             const quickAddBtn = addRow.querySelector('.quick-add');
-            quickAddBtn.addEventListener('click', () => {
-                const title = addRow.querySelector('.quick-title').value.trim();
-                const user = addRow.querySelector('.quick-user').value.trim();
-                const pass = addRow.querySelector('.quick-pass').value.trim();
-                if(!title || !user || !pass) { alert('请完整填写'); return; }
-                const realCat = categories.find(c => c.id === category.id);
-                if(realCat) { realCat.items.push({ id: uuid(), title, username: user, password: pass }); saveToLocal(); render(); }
-                else alert("分类不存在");
-            });
+quickAddBtn.addEventListener('click', () => {
+    const title = addRow.querySelector('.quick-title').value.trim();
+    const url = addRow.querySelector('.quick-url').value.trim();
+    const user = addRow.querySelector('.quick-user').value.trim();
+    const pass = addRow.querySelector('.quick-pass').value.trim();
+    if(!title || !user || !pass) { alert('请完整填写标题、账号和密码'); return; }
+    const realCat = categories.find(c => c.id === category.id);
+    if(realCat) { realCat.items.push({ id: uuid(), title, url: url, username: user, password: pass }); saveToLocal(); render(); }
+    else alert("分类不存在");
+});
             catDiv.appendChild(addRow);
         });
         attachDragAndDrop();
@@ -758,7 +763,7 @@
         document.querySelectorAll('.delete-cat').forEach(btn => btn.onclick = (e) => { e.stopPropagation(); confirmDeleteCategory(btn.dataset.id); });
         document.querySelectorAll('.add-item-btn').forEach(btn => btn.onclick = (e) => { e.stopPropagation(); promptAddItemToCategory(btn.dataset.id); });
     }
- function bindItemDynamicEvents() {
+function bindItemDynamicEvents() {
     document.querySelectorAll('.toggle-pw').forEach(btn => btn.onclick = (e) => { e.stopPropagation(); const card = btn.closest('.cred-item'); const pwSpan = card.querySelector('.password-val'); if(pwSpan) { if(pwSpan.innerText === '••••••••') { pwSpan.innerText = pwSpan.dataset.realPw; btn.innerText = '🙈'; } else { pwSpan.innerText = '••••••••'; btn.innerText = '👁️'; } } });
     document.querySelectorAll('.edit-item').forEach(btn => btn.onclick = (e) => { e.stopPropagation(); const card = btn.closest('.cred-item'); const catId = card.dataset.categoryId; const itemId = card.dataset.itemId; editAccountItem(catId, itemId); });
     document.querySelectorAll('.delete-item').forEach(btn => btn.onclick = (e) => { e.stopPropagation(); const card = btn.closest('.cred-item'); confirmDeleteItem(card.dataset.categoryId, card.dataset.itemId); });
@@ -787,6 +792,23 @@
             let username = el.dataset.realUsername;
             navigator.clipboard.writeText(username).then(() => {
                 alert('✅ 账号已复制到剪贴板');
+            }).catch(() => {
+                alert('复制失败，请手动复制');
+            });
+        };
+    });
+
+    // 点击标题复制链接
+    document.querySelectorAll('.copy-url').forEach(el => {
+        el.onclick = (e) => {
+            e.stopPropagation();
+            let url = el.dataset.url;
+            if (!url) {
+                alert('该账号没有设置链接');
+                return;
+            }
+            navigator.clipboard.writeText(url).then(() => {
+                alert('✅ 链接已复制到剪贴板');
             }).catch(() => {
                 alert('复制失败，请手动复制');
             });
